@@ -1,7 +1,8 @@
 {{ define "main" }}
   {{ $paginator := .Paginate (cond .IsHome (where site.RegularPages "Type" "in" site.Params.mainSections) (.Data.Pages) ) }}
-  {{ range $paginator.Pages }}
-    {{ .Render "content-list" }}
+  {{ range $index, $page := $paginator.Pages }}
+    {{ $page.Scratch.Set "listIndex" (add (add (mul (sub $paginator.PageNumber 1) $paginator.PagerSize) $index) 1) }}
+    {{ $page.Render "content-list" }}
   {{ end }}
   <div class="pagination">
     {{ if .Paginator.HasPrev }}

@@ -15,7 +15,7 @@
       {{ end }}
       {{ if ge (len (where site.RegularPages "Type" "in" site.Params.mainSections)) (.Site.Params.sidebar.postAmount | default 5) }}
         <footer>
-          <a href="{{ ( .Site.Params.viewMorePostsLink | default "blog") | relLangURL }}" class="button">See More</a>
+          <a href="{{ with .Site.Params.viewMorePostsLink }}{{ . | relLangURL }}{{ else }}{{ "/" | relLangURL }}#post{{ $.Site.Params.sidebar.postAmount | default 5 }}{{ end }}" class="button">See More</a>
         </footer>
       {{ end }}
     </section>

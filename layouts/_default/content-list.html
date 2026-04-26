@@ -1,4 +1,4 @@
-<article class="post">
+<article class="post"{{ with $.Scratch.Get "listIndex" }} id="post{{ . }}"{{ end }}>
   {{ .Render "header" }}
   <div class="content">
     {{ .Render "featured" }}
