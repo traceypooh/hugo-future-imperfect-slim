@@ -31,16 +31,16 @@
   })
 
   var tables = document.getElementsByTagName('table');
-  for (i = 0; i < tables.length; i++) {
+  for (var i = 0; i < tables.length; i++) {
     var headers = tables[i].getElementsByTagName('th'),
       rows = tables[i].getElementsByTagName('tr'),
       header = [];
-    for (h = 0; h < headers.length; h++) {
+    for (var h = 0; h < headers.length; h++) {
       header.push(headers[h].textContent);
     }
-    for (r = 0; r < rows.length; r++) {
+    for (var r = 0; r < rows.length; r++) {
       var cells = rows[r].getElementsByTagName('td');
-      for (c = 0; c < cells.length; c++) {
+      for (var c = 0; c < cells.length; c++) {
         if (cells[c].getAttribute('data-header') == undefined && header[c] !== undefined) {
           cells[c].setAttribute('data-header', header[c]);
         }
