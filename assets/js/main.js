@@ -64,7 +64,7 @@ window.onload = function () {
   if (lang != "{{ .Site.Language }}") {
     pathArgs.splice(1, 0, lang);
   }
-  path = pathArgs.join("/");
+  var path = pathArgs.join("/");
   request.open("GET", path, true); // Request the JSON file created during build
   request.onload = function() {
     if (request.status >= 200 && request.status < 400) {
@@ -76,9 +76,12 @@ window.onload = function () {
       idx = lunr(function () {
         this.ref('ref');
         this.field('title');
-        this.field('data');
+        this.field('date');
         this.field('description');
         this.field('body');
+
+        this.field('tags');
+        this.field('categories');
 
         // Loop through all the items in the JSON file and add them to the index
         // so they can be searched.
