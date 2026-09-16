@@ -18,7 +18,12 @@
   {{- end -}}
 {{ else }}
   {{ if .Params.featured }}
-    {{- $feat := (cond (eq "https://" (substr .Params.featured 0 8)) (.Params.featured) ((path.Join "img" .Params.featured) | relURL)) -}}
+    {{- /* absURL, not relURL: og:image/twitter:image must be absolute per the Open
+           Graph spec.  Scrapers vary in leniency -- Apple's will resolve a relative
+           one against the page, Facebook's will not -- so a relative value fails
+           silently on some platforms and works on others.  The `else` branch below
+           already used absURL, so this was also inconsistent within the file. */ -}}
+    {{- $feat := (cond (eq "https://" (substr .Params.featured 0 8)) (.Params.featured) ((path.Join "img" .Params.featured) | absURL)) -}}
     <meta itemprop="image"     content="{{ $feat }}">
     <meta property="og:image"  content="{{ $feat }}">
     <meta name="twitter:image" content="{{ $feat }}">
