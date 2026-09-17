@@ -637,6 +637,32 @@ figcaption {
   text-align: center;
 }
 
+/*
+* Pull a caption up against the image it describes -- the normal case.
+*
+* An image with a caption under it renders as
+*   <p>prose <a><img></a></p>
+*   <figcaption>
+* and the gap between them is the browser's UA default `p { margin-block: 1em }` =
+* 16px; the theme sets no p margin of its own.  Removing it at the source beats
+* cancelling it with a negative margin on the caption.
+*
+* :has() is required -- `p + figcaption` selects the CAPTION, and there is no way to
+* style a preceding sibling without it.  Where :has() is unsupported the rule is
+* skipped and the 16px gap remains: degrades to the old look, breaks nothing.
+*
+* Captions always go below their image, so this needs no opt-out.  A caption inside
+* a <figure> has no <p> before it and is simply unaffected.
+*
+* ~4px of inline descender space remains below the image, which sits on the
+* paragraph's text baseline.  That is not margin and stays -- it is the bit of
+* breathing room that makes this read right.  Tune `margin-bottom` to taste.
+*/
+
+p:has(+ figcaption) {
+  margin-bottom: 0;
+}
+
 /* ==========================================================================
    Classes
    ========================================================================== */
