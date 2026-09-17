@@ -244,6 +244,32 @@ video {
 }
 
 /*
+* The other half of `max-width: 100%` above.
+*
+* An image with width+height attributes is declaring its RATIO, so the browser can
+* reserve correctly-shaped space before the bytes arrive -- that is what stops
+* loading="lazy" from causing layout shift.  But those attributes also set the used
+* height, and max-width above then scales the width down to the column while the
+* height stays pegged, so every such image renders squashed.
+*
+* Scoped rather than applied to bare `img` on purpose, narrowest first:
+*
+*   [width][height]  an image given only ONE of the two is asking to be sized, not
+*                    to keep a ratio -- a bare `img { height: auto }` silently
+*                    breaks it (e.g. a hand-written `<img height="300">`).
+*   [loading]        belt and braces, so a raw/legacy page that happens to carry
+*                    both dimensions is left alone.  Tested for PRESENCE, not for
+*                    ="lazy": switching an above-the-fold image to loading="eager"
+*                    is a normal thing to do, and must not resurrect the squash.
+*
+* Together these match what render-image.html emits and essentially nothing else.
+*/
+
+img[width][height][loading] {
+  height: auto;
+}
+
+/*
 * Remove default fieldset styles.
 */
 
