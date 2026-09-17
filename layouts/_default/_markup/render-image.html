@@ -1,0 +1,43 @@
+{{- /*
+  Markdown image render hook.
+
+  Adds the three attributes an image-heavy post needs and markdown cannot express:
+
+    loading="lazy"    a 55-image post is ~32MB -- about 90 seconds of 720p video --
+                      and without this every image is fetched on load whether or not
+                      the reader ever scrolls.
+    width/height      NOT the display size.  CSS drives the actual width; the browser
+                      uses only the RATIO of these two to reserve correctly-shaped
+                      space before the bytes arrive.  Omitting them makes lazy
+                      loading actively worse than none: unsized images collapse to
+                      zero height and the page jumps as each one lands.
+    decoding="async"  keeps image decode off the main thread.
+
+  Dimensions are read from the file rather than assumed, because assuming is wrong
+  often enough to matter -- on the wedding post roughly a fifth of the images are
+  neither 3:2 nor 2:3 (crops, a 2.06:1 panorama, 4:3 phone shots).  If Hugo cannot
+  read a given format the attributes are simply omitted, which is no worse than
+  before.
+
+  NOTE: this lives in the theme, not in a site's layouts/, because poohbot sets
+  contentDir = "." -- so a site-level layouts/ is inside the content dir and Hugo
+  tries to parse these files as content ("unmarshal failed: invalid character '{'").
+  The theme directory is in that site's ignoreFiles, so it is safe here.
+*/ -}}
+{{- $src := .Destination -}}
+{{- /* content pages sit one level down, so their image paths start ../ */ -}}
+{{- $rel := strings.TrimPrefix "../" $src -}}
+{{- $res := resources.Get $rel -}}
+{{- $w := 0 -}}
+{{- $h := 0 -}}
+{{- /* .Width EXISTS only on image resources.  Hugo does not classify AVIF as one
+       (Go has no AVIF decoder), and calling .Width on a non-image resource is a
+       hard build error, not an empty value -- so the type must be checked first. */ -}}
+{{- if and $res (eq $res.ResourceType "image") -}}
+  {{- $w = $res.Width -}}
+  {{- $h = $res.Height -}}
+{{- end -}}
+<img src="{{ $src | safeURL }}" alt="{{ .Text }}"
+  {{- with .Title }} title="{{ . }}"{{ end }}
+  {{- if and (gt $w 0) (gt $h 0) }} width="{{ $w }}" height="{{ $h }}"{{ end }}
+  loading="lazy" decoding="async">
