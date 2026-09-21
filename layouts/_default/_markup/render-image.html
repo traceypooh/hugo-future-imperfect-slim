@@ -24,7 +24,26 @@
   tries to parse these files as content ("unmarshal failed: invalid character '{'").
   The theme directory is in that site's ignoreFiles, so it is safe here.
 */ -}}
+{{- /*
+  A trailing #size names a display width: ![alt](../img/x.avif#half).  Markdown has
+  no way to express one, and dropping to a raw <img> to get it would lose everything
+  above -- the real width/height and the lazy loading -- which is a bad trade for a
+  styling tweak.  Same idea as the `featured: ...#top30` convention in front matter.
+
+  The fragment MUST come off before resources.Get: it would otherwise miss, and a
+  miss here means no dimensions, which is exactly the case this hook exists to
+  prevent.  Anything unrecognised is ignored rather than guessed at.
+*/ -}}
 {{- $src := .Destination -}}
+{{- $size := "" -}}
+{{- if strings.Contains $src "#" -}}
+  {{- $bits := split $src "#" -}}
+  {{- $src = index $bits 0 -}}
+  {{- $frag := index $bits 1 -}}
+  {{- if in (slice "half" "two-thirds" "third" "quarter") $frag -}}
+    {{- $size = printf "size-%s" $frag -}}
+  {{- end -}}
+{{- end -}}
 {{- /* content pages sit one level down, so their image paths start ../ */ -}}
 {{- $rel := strings.TrimPrefix "../" $src -}}
 {{- $res := resources.Get $rel -}}
@@ -38,6 +57,7 @@
   {{- $h = $res.Height -}}
 {{- end -}}
 <img src="{{ $src | safeURL }}" alt="{{ .Text }}"
+  {{- with $size }} class="{{ . }}"{{ end }}
   {{- with .Title }} title="{{ . }}"{{ end }}
   {{- if and (gt $w 0) (gt $h 0) }} width="{{ $w }}" height="{{ $h }}"{{ end }}
   loading="lazy" decoding="async">
