@@ -44,8 +44,12 @@
     {{- $size = printf "size-%s" $frag -}}
   {{- end -}}
 {{- end -}}
-{{- /* content pages sit one level down, so their image paths start ../ */ -}}
-{{- $rel := strings.TrimPrefix "../" $src -}}
+{{- /* Two ref forms exist in this site: "../img/x" from a content page one level
+       down, and an absolute "/img/x".  assetDir is `img`, so both have to be reduced
+       to the path BELOW img/ before resources.Get will find them.  assetDir cannot
+       just be "." -- that overlaps contentDir, and Hugo then reports every content
+       edit as an "Asset changed" and never re-reads it, which breaks `gogo -w`. */ -}}
+{{- $rel := $src | strings.TrimPrefix "../" | strings.TrimPrefix "/" | strings.TrimPrefix "img/" -}}
 {{- $res := resources.Get $rel -}}
 {{- $w := 0 -}}
 {{- $h := 0 -}}
