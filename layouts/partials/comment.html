@@ -1,0 +1,36 @@
+{{- /*
+  One comment -- w/ its replies (oldest first) nested inside it, each in turn w/ theirs.
+  So the `.comment-reply` indent adds up: a reply to a reply sits one more level in.
+  Params: dict "comment" "comments" (all of this post's, oldest first) "types" (see comments.html) "depth" (0: top)
+*/ -}}
+{{- $c := .comment -}}
+<article id='{{ $c.id }}' class='comment{{ if gt .depth 0 }} comment-reply{{ end }}'>
+  <header>
+    {{ partial "comment-avatar.html" (dict "comment" $c "types" .types) }}
+    <div>
+      <div class='comment-author-container'>
+        <h3 class='comment-author'>
+          {{- if $c.website -}}
+            <a rel='external nofollow' href='{{
+cond (eq "https://" (substr $c.website 0 8)) $c.website (cond (eq "http://" (substr $c.website 0 7)) $c.website (path.Join "https://" $c.website))
+            }}'>{{ $c.name }}</a>
+          {{- else -}}
+            {{- $c.name -}}
+          {{- end -}}
+        </h3>
+        <a class='comment-date' href='#{{ $c.id }}' title='Permalink to this comment'>
+          <time datetime='{{ $c.date }}'>{{ dateFormat "02 Jan 2006" $c.date }}</time>
+        </a>
+      </div>
+      <a class='comment-reply-btn' href='#say-something'>Reply</a>
+    </div>
+  </header>
+  <div class='comment-content'>
+    {{ $c.body | markdownify }}
+  </div>
+  {{- if lt .depth 20 -}}{{/* (a guard, in case some `replyID`s ever loop) */}}
+    {{- range where .comments "replyID" $c.id }}
+  {{ partial "comment.html" (dict "comment" . "comments" $.comments "types" $.types "depth" (add $.depth 1)) }}
+    {{- end -}}
+  {{- end }}
+</article>

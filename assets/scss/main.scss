@@ -1580,6 +1580,7 @@ p:has(+ figcaption) {
   width: $avatar-size;
   height: $avatar-size;
   flex-grow: 0;
+  flex-shrink: 0;
   @include for-mobile-l-up {
     margin: 0 .5em 0 0;
     &.circle {

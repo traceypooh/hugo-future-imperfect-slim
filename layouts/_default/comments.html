@@ -27,9 +27,7 @@
 
           {{/* Hidden fields */}}
           <input type='hidden' name='options[entryId]' value='{{ $entryId }}'>
-          <input type='hidden' name='fields[replyThread]' value=''>
           <input type='hidden' name='fields[replyID]' value=''>
-          <input type='hidden' name='fields[replyName]' value=''>
 
           {{/* User input fields */}}
           <input required name='fields[name]' type='text' placeholder='Your Name'>
@@ -63,50 +61,44 @@
     <div class='comments-container'>
       <h2>Comments</h2>
 
-      {{- if .Site.Data.comments -}}
-        {{/* $comments collects comment files for the current blog entry */}}
-        {{- $comments := index $.Site.Data.comments $entryId -}}
-        {{- if not $comments -}}
+      {{/* Every comment on the site: staticmin's `comments.json` -- deliberately not quite JSON (a bot speed
+           bump).  Drop its "slot" marker lines (eg: `#a7`) & the final `,` -- and it's a JSON array.
+           (format: staticmin `lib/comments_file.js`) */}}
+      {{- $all := slice -}}
+      {{- if fileExists "comments.json" -}}
+        {{- $text := readFile "comments.json" | replaceRE `(?m)^#[a-z]?[0-9a-z]$` "" | strings.TrimSpace | strings.TrimSuffix "," -}}
+        {{- $all = printf "[%s]" $text | transform.Unmarshal -}}
+      {{- end -}}
+      {{- $all = sort $all "date" -}}
+
+      {{/* $types: identity => their avatar's image `type` (eg: `png`), from their newest comment w/ one
+           (staticmin sets it, current, on each) -- so their older comments show it too */}}
+      {{- $types := dict -}}
+      {{- range $c := $all -}}
+        {{- if and $c.identity $c.type -}}
+          {{- $types = merge $types (dict $c.identity $c.type) -}}
+        {{- end -}}
+      {{- end -}}
+
+      {{/* $comments: this blog entry's comments, oldest first */}}
+      {{- $comments := where $all "path" $entryId -}}
+
+      {{/* $byid: id => comment -- so a reply whose parent is missing shows as a top comment, rather than vanish */}}
+      {{- $byid := dict -}}
+      {{- range $comments -}}
+        {{- $byid = merge $byid (dict .id .) -}}
+      {{- end -}}
+
+      {{- if not $comments -}}
           <p>Nothing yet.</p>
         {{- else -}}
+          {{/* each top comment, oldest first -- w/ its replies nested inside it (see partials/comment.html) */}}
           {{- range $comments -}}
-            {{- if not .replyThread -}}
-              {{- $threadID := ._id }}
-              {{- range $comments -}}
-                {{ if or (in ._id $threadID) (in .replyThread $threadID) }}
-                  <article id='{{ ._id }}' class='comment{{ with .replyThread }} comment-reply{{ end }}' data-reply-thread='{{ $threadID }}'>
-                    <header>
-                      <img class='comment-avatar circle' src='https://www.gravatar.com/avatar/{{ .email }}?s=100' alt="{{ .name }}'s Gravatar">
-                      <div>
-                        <div class='comment-author-container'>
-                          <h3 class='comment-author'>
-                            {{- if .website -}}
-                              <a rel='external nofollow' href='{{
-cond (eq "https://" (substr .website 0 8)) .website (cond (eq "http://" (substr .website 0 7)) .website (path.Join "https://" .website))
-                              }}'>{{ .name }}</a>
-                            {{- else -}}
-                              {{- .name -}}
-                            {{- end -}}
-                          </h3>
-                          <a class='comment-date' href='#{{ ._id }}' title='Permalink to this comment'>
-                            <time datetime='{{ .date }}'>{{ dateFormat "02 Jan 2006" .date }}</time>
-                          </a>
-                        </div>
-                        <!-- TODO: Assess Value (ref ln#73): <a href='#{{ .replyID }}' class='reply-target'>{{ .replyName }}</a> -->
-                        <!-- TODO: Assess Value: <span class ="comment-threadID hidden">{{ .replyThread }}</span> -->
-                        <a class='comment-reply-btn' href='#say-something'>Reply</a>
-                      </div>
-                    </header>
-                    <div class='comment-content'>
-                      {{ .body | markdownify }}
-                    </div>
-                  </article>
-                {{ end }}
-              {{ end }}
-            {{ end }}
-          {{ end }}
+            {{- if not (and .replyID (index $byid .replyID)) }}
+          {{ partial "comment.html" (dict "comment" . "comments" $comments "types" $types "depth" 0) }}
+            {{- end -}}
+          {{- end }}
         {{ end }}
-      {{ end }}
     </div>
   </div>
 {{ end }}

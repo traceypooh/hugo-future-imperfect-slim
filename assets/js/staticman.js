@@ -94,10 +94,9 @@
         while (!cmt.matches('.comment')) {  // find the comment containing the clicked "reply" button
           cmt = cmt.parentNode;
         }
-        form.querySelector('input[name="fields[replyThread]"]').value = cmt.dataset.replyThread;
+        // (just `replyID`: the thread & the replied-to name are found from it)
         form.querySelector('input[name="fields[replyID]"]').value = cmt.getAttribute('id');
         let replyName = cmt.querySelector('.comment-author').innerText
-        form.querySelector('input[name="fields[replyName]"]').value = replyName;
 
         // display reply name
         form.querySelector('.reply-notice').classList.remove('hidden');

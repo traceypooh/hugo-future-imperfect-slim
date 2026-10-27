@@ -1,0 +1,32 @@
+{{- /*
+  A commenter's avatar -- made here, so no 3rd party requests (was gravatar.com: leaked every viewer's IP,
+  and each commenter's email md5).
+  - their Gravatar, if staticmin saved one: `avatars/<identity>.<type>` -- w/ the `type` (eg: `png`) of their
+    newest comment w/ one (see `$types` in comments.html), else the comment's own `type`
+  - else a GitHub-style identicon: a 5x5 grid, whose left 3 columns are set from hex digits of a hash
+    (even => filled), then mirrored -- in one color from the hash.  Seeded by `identity` (or the name, for
+    older comments that predate it).
+  Params: dict "comment" (one comment) "types" (map: identity => image type)
+*/ -}}
+{{- $identity := .comment.identity | default "" -}}
+{{- $type := or (and $identity (index .types $identity)) .comment.type -}}
+{{- if and $identity $type -}}
+  <img class='comment-avatar circle' src='{{ printf "avatars/%s.%s" $identity $type | relURL }}' alt='' loading='lazy'>
+{{- else -}}
+  {{- $h := sha256 ($identity | default .comment.name | default "") -}}
+  {{- $fill := printf "hsl(%d 55%% 55%%)" (mod (int (printf "0x%s" (substr $h 15 4))) 360) -}}
+  <svg class='comment-avatar circle' viewBox='-0.5 -0.5 6 6' aria-hidden='true'>
+    <rect x='-0.5' y='-0.5' width='6' height='6' fill='#f0f0f0'/>
+    {{- range $i := seq 0 14 -}}
+      {{- if in "02468ace" (substr $h $i 1) -}}
+        {{- $x := div $i 5 -}}
+        {{- $y := mod $i 5 }}
+    <rect x='{{ $x }}' y='{{ $y }}' width='1.02' height='1.02' fill='{{ $fill }}'/>
+        {{- /* mirror (the middle column is its own mirror) */ -}}
+        {{- if ne $x 2 }}
+    <rect x='{{ sub 4 $x }}' y='{{ $y }}' width='1.02' height='1.02' fill='{{ $fill }}'/>
+        {{- end -}}
+      {{- end -}}
+    {{- end }}
+  </svg>
+{{- end -}}
